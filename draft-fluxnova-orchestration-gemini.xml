@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" 
+                  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" 
+                  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" 
+                  xmlns:camunda="http://camunda.org/schema/1.0/bpmn" 
+                  xmlns:di="http://www.omg.org/spec/DD/20100524/DI" 
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  id="Definitions_1" 
+                  targetNamespace="http://bpmn.io/schema/bpmn" 
+                  exporter="Fluxnova Modeler" 
+                  exporterVersion="1.0.0">
+  <bpmn:process id="AgenticGuardrailProcess" name="Agentic Guardrail Flow" isExecutable="true">
+    <bpmn:startEvent id="StartEvent_1" name="Payload Received">
+      <bpmn:outgoing>Flow_1</bpmn:outgoing>
+    </bpmn:startEvent>
+    
+    <bpmn:serviceTask id="Task_Extract" name="Extract Payload" camunda:type="external" camunda:topic="payload-extraction">
+      <bpmn:incoming>Flow_1</bpmn:incoming>
+      <bpmn:outgoing>Flow_2</bpmn:outgoing>
+    </bpmn:serviceTask>
+    
+    <bpmn:serviceTask id="Task_Agent" name="Agentic Processing" camunda:type="external" camunda:topic="agent-inference">
+      <bpmn:incoming>Flow_2</bpmn:incoming>
+      <bpmn:outgoing>Flow_3</bpmn:outgoing>
+    </bpmn:serviceTask>
+    
+    <bpmn:exclusiveGateway id="Gateway_Confidence" name="Confidence &gt; 90%?">
+      <bpmn:incoming>Flow_3</bpmn:incoming>
+      <bpmn:outgoing>Flow_Yes</bpmn:outgoing>
+      <bpmn:outgoing>Flow_No</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    
+    <bpmn:userTask id="Task_HumanReview" name="Human-in-the-Loop Review">
+      <bpmn:incoming>Flow_No</bpmn:incoming>
+      <bpmn:outgoing>Flow_4</bpmn:outgoing>
+    </bpmn:userTask>
+    
+    <bpmn:serviceTask id="Task_Commit" name="Commit State" camunda:type="external" camunda:topic="state-commit">
+      <bpmn:incoming>Flow_Yes</bpmn:incoming>
+      <bpmn:incoming>Flow_4</bpmn:incoming>
+      <bpmn:outgoing>Flow_5</bpmn:outgoing>
+    </bpmn:serviceTask>
+    
+    <bpmn:endEvent id="EndEvent_1" name="Process Complete">
+      <bpmn:incoming>Flow_5</bpmn:incoming>
+    </bpmn:endEvent>
+    
+    <bpmn:sequenceFlow id="Flow_1" sourceRef="StartEvent_1" targetRef="Task_Extract" />
+    <bpmn:sequenceFlow id="Flow_2" sourceRef="Task_Extract" targetRef="Task_Agent" />
+    <bpmn:sequenceFlow id="Flow_3" sourceRef="Task_Agent" targetRef="Gateway_Confidence" />
+    <bpmn:sequenceFlow id="Flow_Yes" name="Yes" sourceRef="Gateway_Confidence" targetRef="Task_Commit">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${confidence &gt; 0.90}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_No" name="No" sourceRef="Gateway_Confidence" targetRef="Task_HumanReview">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${confidence &lt;= 0.90}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_4" sourceRef="Task_HumanReview" targetRef="Task_Commit" />
+    <bpmn:sequenceFlow id="Flow_5" sourceRef="Task_Commit" targetRef="EndEvent_1" />
+  </bpmn:process>
+</bpmn:definitions>

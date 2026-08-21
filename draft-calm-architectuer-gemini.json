@@ -1,0 +1,119 @@
+{
+  "$schema": "https://calm.finos.org/release/1.2/meta/calm.json",
+  "name": "Automated Architectural Discovery PoC Pipeline",
+  "nodes": [
+    {
+      "unique-id": "fluxnova-orchestrator",
+      "node-type": "system",
+      "name": "Fluxnova Orchestrator",
+      "description": "Standalone BPMN execution engine governing the AI pipeline."
+    },
+    {
+      "unique-id": "dapr-sidecar-mesh",
+      "node-type": "network",
+      "name": "Dapr Sidecar Mesh",
+      "description": "Distributed task routing, state management, and external output bindings."
+    },
+    {
+      "unique-id": "sqlite-claim-check-db",
+      "node-type": "database",
+      "name": "SQLite State Store",
+      "description": "Local persistent state store for massive AST JSON payloads."
+    },
+    {
+      "unique-id": "tree-sitter-worker",
+      "node-type": "service",
+      "name": "Tree-sitter Worker",
+      "description": "Deterministic AST parser and cross-repo edge resolution engine."
+    },
+    {
+      "unique-id": "qwen-scanner-agent",
+      "node-type": "ai-agent",
+      "name": "Scanner Agent (Qwen 3.8)",
+      "description": "Qwen 3.8 27B model running via llama.cpp for semantic node annotation."
+    },
+    {
+      "unique-id": "colibri-architect-agent",
+      "node-type": "ai-agent",
+      "name": "Architect Agent (GLM-5.2)",
+      "description": "GLM-5.2 744B streaming MoE for architectural graph synthesis."
+    },
+    {
+      "unique-id": "mcp-tool-server",
+      "node-type": "mcp-server",
+      "name": "MCP Tool Server",
+      "description": "Exposes @calmstudio/mcp tools and custom Tree-sitter query functions."
+    },
+    {
+      "unique-id": "calm-hub-registry",
+      "node-type": "system",
+      "name": "CALM Hub Registry",
+      "description": "Centralized artifact store for validated enterprise architectures."
+    }
+  ],
+  "relationships": [
+    {
+      "unique-id": "rel-fluxnova-dapr",
+      "relationship-type": {
+        "connects": {
+          "source": { "node": "fluxnova-orchestrator" },
+          "destination": { "node": "dapr-sidecar-mesh" }
+        }
+      }
+    },
+    {
+      "unique-id": "rel-treesitter-db",
+      "relationship-type": {
+        "connects": {
+          "source": { "node": "tree-sitter-worker" },
+          "destination": { "node": "sqlite-claim-check-db" }
+        }
+      }
+    },
+    {
+      "unique-id": "rel-qwen-db",
+      "relationship-type": {
+        "connects": {
+          "source": { "node": "qwen-scanner-agent" },
+          "destination": { "node": "sqlite-claim-check-db" }
+        }
+      }
+    },
+    {
+      "unique-id": "rel-colibri-db",
+      "relationship-type": {
+        "connects": {
+          "source": { "node": "colibri-architect-agent" },
+          "destination": { "node": "sqlite-claim-check-db" }
+        }
+      }
+    },
+    {
+      "unique-id": "rel-qwen-mcp",
+      "relationship-type": {
+        "connects": {
+          "source": { "node": "qwen-scanner-agent" },
+          "destination": { "node": "mcp-tool-server" }
+        }
+      }
+    },
+    {
+      "unique-id": "rel-colibri-mcp",
+      "relationship-type": {
+        "connects": {
+          "source": { "node": "colibri-architect-agent" },
+          "destination": { "node": "mcp-tool-server" }
+        }
+      }
+    },
+    {
+      "unique-id": "rel-dapr-calmhub",
+      "relationship-type": {
+        "connects": {
+          "source": { "node": "dapr-sidecar-mesh" },
+          "destination": { "node": "calm-hub-registry" }
+        }
+      }
+    }
+  ]
+}
